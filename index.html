@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; media-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Learning Gate</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="fx"></div>
+
+<section class="screen" id="home">
+  <button id="gear" aria-label="Grown-ups (hold)">⚙︎</button>
+  <button class="ctrlBtn corner" aria-label="Sound and light">🔊☀️</button>
+  <button class="helpOpen helpCorner" aria-label="Help, call a grown-up">🆘 Help</button>
+  <div class="homewrap">
+    <div class="mascot">🦉</div>
+    <h1 id="hello">Hi there!</h1>
+    <p class="homemsg" id="homeMsg"></p>
+    <button class="bigbtn" id="startBtn">🚀 Let's learn!</button>
+    <div class="row"><button class="bigbtn2" id="chBtn">🏆 Challenges</button><button class="bigbtn2 ghost" id="shelfBtn">🏆 My trophies</button></div>
+    <div class="starline">⭐ <span id="stars">0</span> stars</div>
+    <div class="streak" id="streakline"></div>
+  </div>
+</section>
+
+<section class="screen" id="quiz">
+  <header class="qhead"><span id="qbadge" class="badge"></span><div id="dots" class="dots"></div><button class="helpOpen say" aria-label="Help, call a grown-up">🆘</button><button class="ctrlBtn say" aria-label="Sound and light">🎚️</button><button id="sayAgain" class="say" aria-label="Hear it again">🔊</button></header>
+  <div class="qbody">
+    <div id="qprompt" class="prompt"></div>
+    <div id="qvisual" class="visual"></div>
+    <div id="feedback"></div>
+    <div id="answers" class="answers"></div>
+  </div>
+</section>
+
+<section class="screen" id="reward">
+  <div class="homewrap">
+    <div class="mascot">🏆</div>
+    <h1 id="rewardTitle">You did it!</h1>
+    <div id="rewardStars" class="rstars"></div>
+    <p class="homemsg" id="rewardText"></p>
+    <button class="bigbtn" id="playBtn">▶ Let's play!</button>
+  </div>
+</section>
+
+<section class="screen" id="play">
+  <header class="playhead" id="playheadBar"><span><span id="playLabel">⏰ Play time left:</span> <b id="timeLeft">--:--</b></span><span><button class="small-btn helpOpen">🆘 Help</button><button class="small-btn ctrlBtn">🔊☀️</button><button class="small-btn" id="playLearn">🏆 Challenges</button><button class="small-btn parent-only" id="openSettings">⚙️ Tablet Settings</button><button class="small-btn danger" id="endParent">🔒 End &amp; lock</button><button class="small-btn ghost" id="playParent">⚙︎</button></span></header>
+  <div id="appgrid" class="appgrid"></div>
+</section>
+
+<section class="screen" id="challenges">
+  <header class="playhead"><button class="small-btn" id="chBack">⬅ Back</button><button class="small-btn carbtn" id="carToggle">🚗 Car mode</button><span><button class="small-btn helpOpen">🆘 Help</button><button class="small-btn ctrlBtn">🔊☀️</button><button class="small-btn" id="chShelf">🏆 Shelf</button></span></header>
+  <div id="chTop" class="chtop"></div>
+  <div id="chGrid" class="chgrid"></div>
+</section>
+
+<section class="screen" id="chresult">
+  <button class="helpOpen helpCorner" aria-label="Help, call a grown-up">🆘 Help</button>
+  <div class="homewrap"><div id="chResultBody"></div>
+    <div class="row"><button class="bigbtn" id="chAgain">▶ Next level</button><button class="bigbtn2 ghost" id="chDone">All challenges</button></div></div>
+</section>
+
+<section class="screen" id="shelf">
+  <header class="playhead"><button class="small-btn" id="shelfBack">⬅ Back</button><span style="font-size:30px;font-weight:700">🏆 My Trophy Shelf</span><button class="small-btn helpOpen">🆘 Help</button></header>
+  <div id="shelfBody" class="shelfbody"></div>
+</section>
+
+<section class="screen" id="pview">
+  <header class="phead"><h2 id="pvTitle">📈 Progress</h2><span><button class="small-btn" id="pvRefresh">↻ Refresh</button><button class="small-btn" id="pvGear">⚙ Grown-ups</button></span></header>
+  <div id="pvBody" class="pbody"></div>
+</section>
+
+<section class="screen" id="parent">
+  <header class="phead"><h2>👩‍👧 Grown-ups</h2><button class="small-btn ok" id="parentDone">Save &amp; close</button></header>
+  <div id="parentBody" class="pbody"></div>
+</section>
+
+<div id="ctrlModal" class="modal"><div class="ctrlbox">
+  <div class="crow"><button id="volDown" class="cbtn">−</button><span id="volIcon" class="cicon">🔉</span><div id="volBars" class="bars vol"></div><button id="volUp" class="cbtn">+</button></div>
+  <div class="crow"><button id="briDown" class="cbtn">−</button><span class="cicon">☀️</span><div id="briBars" class="bars bri"></div><button id="briUp" class="cbtn">+</button></div>
+  <button class="small-btn ok" id="ctrlClose">✔ Done</button></div></div>
+
+<div id="helpModal" class="modal"><div class="helpbox">
+  <h2>🆘 Need help?</h2><p id="helpNote" class="helpnote"></p>
+  <div id="helpBtns" class="helpbtns"></div>
+  <button class="small-btn" id="helpClose">I'm OK, go back</button></div></div>
+
+<div id="pinModal" class="modal"><div class="pinbox"><h3 id="pinTitle">Grown-ups only</h3><div id="pinDots" class="pindots">○○○○</div><div id="pinPad" class="pinpad"></div></div></div>
+
+<script src="secrets.js"></script>
+<script src="content.js"></script>
+<script src="engine.js"></script>
+<script src="curriculum.js"></script>
+<script src="banks.js"></script>
+<script src="lang-banks.js"></script>
+<script src="skills.js"></script>
+<script src="challenges.js"></script>
+<script src="sync.js"></script>
+<script src="studycall.js"></script>
+<script src="features.js"></script>
+<script src="guide.js"></script>
+<script src="shared.js"></script>
+<script src="stories.js"></script>
+<script src="bedtime.js"></script>
+<script src="library-books.js"></script>
+<script src="library.js"></script>
+<script src="setup.js"></script>
+</body>
+</html>
