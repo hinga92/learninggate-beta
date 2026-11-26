@@ -1,6 +1,6 @@
 /* In-app User guide + About (Grown-ups area). Family edition: written for any family. */
 'use strict';
-const APP_VERSION = '0.3 (family beta)';
+const APP_VERSION = '0.3.1 (family beta)';
 const APP_DATE = 'November 2026';
 const APP_DEVELOPER = 'a parent, for families in our community';
 const MASCOT = () => (typeof S !== 'undefined' && S.mascotName) || 'Hoot';
@@ -21,7 +21,7 @@ const GUIDE = [
     <li>Play rules (questions per unlock, minutes earned, daily limit), <b>rest time</b> and <b>bedtime-story time</b>.</li>
     <li>An optional <b>class sight-word list</b> from the teacher.</li></ol>
     <p>All of it can be changed later here in Grown-ups. <b>👧 Child, grade and sight words</b> has a button to run the wizard again.</p>
-    <p><b>On an Android tablet</b>, then tap <b>Fix</b> next to each ⚠️ in <b>Tablet setup</b> (Home app, display over other apps, microphone, usage access…) and tick the apps your child may use after learning. <b>On an iPad</b>, approve Screen Time and choose the apps that need learning first.</p>`],
+    <p><b>On an Android tablet</b>, then tap <b>Fix</b> next to each ⚠️ in <b>Tablet setup</b> (Home app, display over other apps, microphone, usage access…) and tick the apps your child may use after learning. The lock only works while Learning Gate is the tablet's <b>Home app</b>: a copy that isn't the Home app (for example a test copy next to another Learning Gate) never pulls itself in front of other apps. <b>On an iPad</b>, approve Screen Time and choose the apps that need learning first.</p>`],
   ["A learning day", `
     <ol><li>__KID__ taps <b>🚀 Let's learn!</b> Each question is read aloud. A wrong first try gives a hint; a second miss shows the answer and brings the skill back later.</li>
     <li>The reward screen shows the score and the minutes earned. <b>Let's play!</b> opens the apps you allowed, with a countdown.</li>
@@ -70,7 +70,7 @@ const GUIDE = [
     <li>One new story per night (14 stories in rotation). <b>Hear it again</b> is allowed but counts once. Its own <b>🌙 nights in a row</b> streak. It never unlocks play time.</li>
     <li>Change story time or turn it off in the <b>🌙 Bedtime story</b> card.</li></ul>`],
   ['📚 I read a book (real books)', `
-    <p>A timer (15 minutes by default) for a real paper book.</p>
+    <p>A timer for a real paper book. The setup wizard picks the minutes for the grade: 10 (Kindergarten), 15 (Grades 1–2), 20 (Grade 3), 25 (Grade 4) or 30 (Grade 5). Change it any time in Rules.</p>
     <ol><li><b>Which book?</b> Tap a recent book, a book from your <b>home library</b>, or <b>＋ A new book</b> and type the title.</li>
     <li>When time is up, check the title and confirm with the PIN.</li></ol>
     <p><b>Finished the whole book before the timer?</b> Tap <b>✅ I finished my book</b>. A grown-up enters the PIN, the minutes actually read are filled in (you can change them), and <b>Done</b> gives the full reward without a second PIN.</p>
@@ -80,7 +80,7 @@ const GUIDE = [
     <p>Your own paper books can live in the app as shelves (titles only, never the books' text). A new family starts with one <b>sample shelf of classic folk tales</b> that any library has.</p>
     <ol><li>Grown-ups → <b>🏠 Home library</b> → <b>＋ Add a book</b>: title, author, a shelf name (for example a series), and whether you read it together.</li>
     <li>In <b>📚 I read a book</b>, the next book from each shelf is shown first.</li>
-    <li><b>Talk about it:</b> after reading, Pip asks 3 short questions aloud; a grown-up taps <b>👍 Got it</b> or <b>🤔 Needed help</b>. There is no pass or fail. Add your own question to any book with ✎.</li></ol>
+    <li><b>Talk about it:</b> after reading, Pip asks 3 short questions aloud that fit the grade (Kindergarten–Grade 2: who, where, the problem, the ending; Grades 3–5: how a character changed, the lesson, which part proves it, who tells the story); a grown-up taps <b>👍 Got it</b> or <b>🤔 Needed help</b>. There is no pass or fail. Add your own question to any book with ✎.</li></ol>
     <p>Each book moves through <b>To read → 🤝 Read together → ⭐ Read on their own → 🏅 Mastered</b>.</p>`],
   ['Feelings check-in and __MASCOT__', `
     <p>Once a day the app asks "How are you feeling today?" (happy, calm, tired, sad, mad, worried). It can be skipped. Sad, mad or worried gets a kind reply and buttons to call the Help grown-up or start a study call. It never blocks learning.</p>
