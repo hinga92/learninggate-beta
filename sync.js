@@ -13,6 +13,12 @@ let syncStatus = '';
 function defaultDeviceName() {
   const st = Bridge.state(); return st.ios ? (/iPhone/.test(navigator.userAgent) ? 'iPhone' : 'iPad') : (Bridge.native ? 'Android tablet' : 'Browser');
 }
+// Every read and write goes to the family's Sheet as a POST with the SECRET in the body, never in the web address
+// (addresses end up in server logs and browser history). Needs the v0.3.2 Sheet script.
+function syncPost(body) {
+  return fetch(S.syncUrl, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({key: S.syncKey}, body))})
+    .then(r => r.json());
+}
 function syncReady() { return /^https:\/\/script\.google(usercontent)?\.com\//.test(S.syncUrl || '') && (S.syncKey || '').length >= 6; }
 
 function sessionSummary(s) {
@@ -62,8 +68,7 @@ function renderParentView() {
   show('pview');
   if (!syncReady()) { $('#pvBody').innerHTML = `<div class="card"><h3>Connect your Google Sheet first</h3><p>Hold ⚙ → enter your PIN → <b>📡 Progress sync</b>, then paste the web app URL and secret (the same ones as on your child's tablet). Step-by-step help: FAMILY_SETUP.md.</p></div>`; return; }
   $('#pvBody').innerHTML = '<p class="muted" style="text-align:center">Loading progress…</p>';
-  fetch(S.syncUrl + (S.syncUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(S.syncKey))
-    .then(r => r.json()).then(d => {
+  syncPost({action: 'dash'}).then(d => {
       if (!d.ok) throw new Error(d.error || 'error');
       const rows = (d.rows || []).map(r => ({t: +new Date(r[0]) || 0, device: r[1], child: r[2], type: r[3], ch: r[4], level: r[5], ok: +r[6], n: +r[7], mins: +r[8], pass: r[9], skills: r[12]}));
       const snaps = (d.snaps || []).sort((a, b) => b.t - a.t);
@@ -96,6 +101,8 @@ function syncCard(st) {
     <label>Device name <input id="sDev" value="${esc(S.deviceName || defaultDeviceName())}"></label>
     <label>Web app URL <input id="sUrl" value="${esc(S.syncUrl)}" placeholder="https://script.google.com/macros/s/…/exec" style="max-width:420px"></label>
     <label>Secret <input id="sKey" value="${esc(S.syncKey)}" placeholder="same as in the script"></label>
+    ${S.deviceRole === 'parent' ? `<label>Remote-control PIN <input id="sDashPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="4 or 6 digits"></label><button class="small-btn" id="sDashPinSet">Set remote-control PIN</button>
+    <p class="muted" id="sDashNote">Remote commands (+ play, lock, messages) need this PIN, checked by your Sheet. It is the same PIN as on the phone dashboard. Use a different one from the PIN on your child's devices: their PIN never leaves those devices.</p>` : ''}
     <p class="muted">${syncReady() ? (S.deviceRole === 'parent' ? 'Ready: the home screen shows the dashboard.' : (P.lastSync ? 'Last sent ' + ago(P.lastSync) + '.' : 'Not sent yet.') + (syncStatus === 'offline' ? ' Offline right now; it will retry.' : '')) : 'Not connected. Optional: see FAMILY_SETUP.md (make your own copy of the Sheet, about 10 minutes). Without it, everything works on this device only.'}</p>
     <div class="row"><button class="small-btn" id="sTest">Save and send now</button>${S.deviceRole === 'parent' ? '<button class="small-btn" id="sView">Open dashboard</button>' : ''}</div></div>`;
 }

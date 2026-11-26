@@ -23,7 +23,29 @@ const sha256 = (() => { const K = [], H0 = []; let n = 2, c = 0; const frac = x 
 const PIN_ROUNDS = 3000;
 const pinDigest = (pin, salt) => { let h = salt + ':' + pin; for (let i = 0; i < PIN_ROUNDS; i++) h = sha256(h + salt); return h; };
 const makePin = pin => { const salt = Array.from(crypto.getRandomValues(new Uint8Array(12)), x => x.toString(16).padStart(2, '0')).join(''); return 'h1$' + salt + '$' + pinDigest(pin, salt); };
-const pinOk = v => { const p = String(S.pin || '').split('$'); return p[0] === 'h1' && p.length === 3 && pinDigest(v, p[1]) === p[2]; };
+const pinOk = v => { const p = String(S.pin || '').split('$'); return p[0] === 'h1' && p.length === 3 && pinDigest(v, p[1]) === p[2]; };   // old format (h1)
+// New format h2$iterations$salt$hash: PBKDF2-SHA256 with 210,000 rounds, done by the browser's own crypto (fast for a parent, slow to guess offline).
+// A 4-digit PIN keeps a child out of Grown-ups; it is not device security (anyone who can read the device's storage can still try all 10,000).
+const PIN_RE = /^\d{4}(\d{2})?$/, PBKDF2_ITER = 210000;
+const easyPin = p => /^(\d)\1+$/.test(p) || '0123456789'.includes(p) || '9876543210'.includes(p) || /^(2580|0852|1212|1122|112233|121212|123123)$/.test(p);
+const hasSubtle = () => { try { return !!(window.crypto && crypto.subtle && crypto.subtle.deriveBits && window.TextEncoder); } catch (e) { return false; } };
+async function pbkdf2Hex(pin, salt, iter) {
+  const enc = new TextEncoder(), k = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: iter}, k, 256);
+  return Array.from(new Uint8Array(bits), x => x.toString(16).padStart(2, '0')).join('');
+}
+function hardenPin(pin) {   // replace an h1 hash with h2 (right after setting a PIN, or the first time an old PIN is entered)
+  if (!hasSubtle()) return Promise.resolve(false);
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)), x => x.toString(16).padStart(2, '0')).join(''), was = S.pin;
+  return pbkdf2Hex(pin, salt, PBKDF2_ITER).then(h => { if (S.pin !== was) return false; S.pin = 'h2$' + PBKDF2_ITER + '$' + salt + '$' + h; Bridge.save('settings', S); return true; }).catch(() => false);
+}
+function setPin(pin) { S.pin = makePin(pin); S.pinLen = pin.length; S.pinLock = {fails: 0, until: 0}; return hardenPin(pin); }
+function pinCheck(v) {   // → Promise<boolean>
+  const p = String(S.pin || '').split('$');
+  if (p[0] === 'h2' && p.length === 4) { const it = +p[1]; if (!hasSubtle() || !(it >= 1000 && it <= 5e6)) return Promise.resolve(false);
+    return pbkdf2Hex(v, p[2], it).then(h => h === p[3]).catch(() => false); }
+  const ok = pinOk(v); if (ok) hardenPin(v); return Promise.resolve(ok);
+}
 const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
 function choicesFrom(answer, wrongs, n = 3) {
   const w = uniq(wrongs.map(String)).filter(x => x !== String(answer));
@@ -85,7 +107,7 @@ const Bridge = (() => {
       speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.rate = 0.85; u.pitch = 1.1; if (voice) u.voice = voice; speechSynthesis.speak(u);
     },
     stopSpeak() { if (N) N.stopSpeaking(); else if (window.speechSynthesis) speechSynthesis.cancel(); },
-    canListen() { return N ? N.hasRecognizer() === 'true' || N.hasRecognizer() === true : !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
+    canListen() { if (typeof S !== 'undefined' && S.micOn === false) return false; return N ? N.hasRecognizer() === 'true' || N.hasRecognizer() === true : !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
     listen(onResult, onError) {
       window.__speechResult = r => onResult(typeof r === 'string' ? JSON.parse(r) : r);
       window.__speechError = e => onError(e);
@@ -143,7 +165,9 @@ if (!Array.isArray(S.classWords)) S.classWords = [];
 if (S.pin && !S.setupDone) S.setupDone = true;   // a device that was set up before the wizard existed
 buildSight(S.grade, S.classWords);
 if (!(S.volumeCapPct >= 10 && S.volumeCapPct <= 100)) S.volumeCapPct = 80;
-if (/^\d{4}$/.test(S.pin || '')) { S.pin = makePin(S.pin); Bridge.save('settings', S); }   // upgrade an old plain-text PIN
+if (/^\d{4}$/.test(S.pin || '')) { setPin(S.pin); Bridge.save('settings', S); }   // upgrade an old plain-text PIN
+if (S.pinLen !== 6) S.pinLen = 4;
+if (typeof S.micOn !== 'boolean') S.micOn = !!Bridge.native;   // the web preview starts with the microphone off (browsers send speech to Google or Apple)
 if (!S.pinLock) S.pinLock = {fails: 0, until: 0};
 let P = Bridge.load('progress') || {skills: {}, sessions: [], stars: 0, usage: {}, sessionCount: 0};
 const saveAll = () => { Bridge.save('settings', S); Bridge.save('progress', P); Bridge.config({minutesPerUnlock: S.minutesPerUnlock, bedtimeStart: S.bedtimeStart, bedtimeEnd: S.bedtimeEnd, syncUrl: S.syncUrl || '', syncKey: S.syncKey || '', deviceRole: S.deviceRole || 'child', deviceName: S.deviceName || (typeof defaultDeviceName === 'function' ? defaultDeviceName() : '')}); };
@@ -566,16 +590,27 @@ function renderPlay() {
 function askPin(cb, title = 'Grown-ups only') {
   const locked = () => S.pinLock.until > Date.now();
   const lockMsg = () => `Too many tries. Wait ${Math.ceil((S.pinLock.until - Date.now()) / 60000)} min.`;
-  $('#pinTitle').textContent = locked() ? lockMsg() : title; let v = ''; const d = $('#pinDots'); const draw = () => d.textContent = '●'.repeat(v.length) + '○'.repeat(4 - v.length); draw();
+  const len = S.pinLen === 6 ? 6 : 4; let busy = false;
+  $('#pinTitle').textContent = locked() ? lockMsg() : title; let v = ''; const d = $('#pinDots'); const draw = () => d.textContent = '●'.repeat(v.length) + '○'.repeat(len - v.length); draw();
   $('#pinPad').innerHTML = [1,2,3,4,5,6,7,8,9,'✕',0,'⌫'].map(k => `<button data-k="${k}">${k}</button>`).join('');
   const prev = document.querySelector('.screen.on')?.id;
+  $('#pinPad').querySelectorAll('button').forEach(b => b.onclick = () => { const k = b.dataset.k; if (busy) return;
+    if (k === '✕') { $('#pinModal').classList.remove('on'); return cb(false); }
+    if (k === '⌫') v = v.slice(0, -1); else if (v.length < len) v += k; draw();
+    if (locked()) { v = ''; $('#pinTitle').textContent = lockMsg(); draw(); return; }
+    if (v.length === len) { busy = true; pinCheck(v).then(ok => { busy = false;
+      if (ok) { S.pinLock = {fails: 0, until: 0}; Bridge.save('settings', S); $('#pinModal').classList.remove('on'); cb(true); }
+      else { v = ''; const f = ++S.pinLock.fails; if (f >= 5) { S.pinLock.until = Date.now() + Math.min(15, Math.pow(2, f - 5)) * 60000; $('#pinTitle').textContent = lockMsg(); }
+        Bridge.save('settings', S); d.classList.add('shake'); setTimeout(() => { d.classList.remove('shake'); draw(); }, 500); } }); } });
+  $('#pinModal').classList.add('on');
+}
+function askDigits(cb, title) {   // 4–6 digits that are checked elsewhere (the dashboard PIN is checked by the family's Sheet)
+  let v = ''; const d = $('#pinDots'); const draw = () => d.textContent = v.length ? '●'.repeat(v.length) : '○○○○'; draw(); $('#pinTitle').textContent = title;
+  $('#pinPad').innerHTML = [1,2,3,4,5,6,7,8,9,'✕',0,'⌫','✓'].map(k => `<button data-k="${k}"${k === '✓' ? ' class="pinok"' : ''}>${k}</button>`).join('');
   $('#pinPad').querySelectorAll('button').forEach(b => b.onclick = () => { const k = b.dataset.k;
     if (k === '✕') { $('#pinModal').classList.remove('on'); return cb(false); }
-    if (k === '⌫') v = v.slice(0, -1); else v += k; draw();
-    if (locked()) { v = ''; $('#pinTitle').textContent = lockMsg(); draw(); return; }
-    if (v.length === 4) { if (pinOk(v)) { S.pinLock = {fails: 0, until: 0}; Bridge.save('settings', S); $('#pinModal').classList.remove('on'); cb(true, v); }
-      else { v = ''; const f = ++S.pinLock.fails; if (f >= 5) { S.pinLock.until = Date.now() + Math.min(15, Math.pow(2, f - 5)) * 60000; $('#pinTitle').textContent = lockMsg(); }
-        Bridge.save('settings', S); d.classList.add('shake'); setTimeout(() => { d.classList.remove('shake'); draw(); }, 500); } } });
+    if (k === '✓') { if (!PIN_RE.test(v)) { d.classList.add('shake'); setTimeout(() => d.classList.remove('shake'), 500); return; } $('#pinModal').classList.remove('on'); return cb(true, v); }
+    if (k === '⌫') v = v.slice(0, -1); else if (v.length < 6) v += k; draw(); });
   $('#pinModal').classList.add('on');
 }
 function openParent(firstRun) {
@@ -605,8 +640,10 @@ function renderParent(firstRun) {
   const last7 = {}; P.sessions.forEach(s => { if (Date.now() - s.t < 7 * 864e5) { const e = last7[s.date] = last7[s.date] || {n: 0, ok: 0, q: 0, mins: 0, dur: 0}; e.n++; e.q += s.n; e.ok += s.ok; e.mins += s.mins; e.dur += s.dur; } });
   const weak = Object.keys(SKILLS).filter(id => sk(id).seen >= 3).sort((a, b) => (sk(a).correct / sk(a).seen) - (sk(b).correct / sk(b).seen)).slice(0, 5);
   $('#parentBody').innerHTML = `
-    ${firstRun ? '<div class="card hl"><h3>Welcome! Set a 4-digit grown-up PIN</h3><p>The PIN protects these settings and lets you unlock the tablet any time.</p></div>' : ''}
-    <div class="card"><h3>PIN</h3><input id="pinNew" inputmode="numeric" maxlength="4" placeholder="${S.pin ? 'Change PIN (4 digits)' : 'New PIN (4 digits)'}"></div>
+    ${Bridge.native ? '' : '<div class="card"><h3>🌐 Web preview</h3><p>All the learning works here, but this page <b>can\'t lock the device</b>. Use Guided Access on an iPad, or the Android tablet app for the lock. See the guide: "Web preview or tablet app?"</p></div>'}
+    ${firstRun ? '<div class="card hl"><h3>Welcome! Set a grown-up PIN (4 or 6 digits)</h3><p>The PIN protects these settings and lets you unlock the tablet any time.</p></div>' : ''}
+    <div class="card"><h3>PIN</h3><input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="${S.pin ? 'Change PIN (4 or 6 digits)' : 'New PIN (4 or 6 digits)'}">
+      <p class="muted">6 digits is stronger. The PIN keeps your child out of Grown-ups; it stays on this device only and is never sent to your Sheet. Each device has its own PIN.</p></div>
     ${setupRows.length ? `<div class="card"><h3>Tablet setup</h3>${setupRows.map(r => `<div class="setrow"><span>${r[2] ? '✅' : '⚠️'} ${r[1]}</span>${r[0] === 'guided' ? '' : r[0] === 'pickapps' ? `<button class="small-btn" data-setup="pickapps">${r[2] ? 'Change' : 'Choose'}</button>` : r[2] ? '' : `<button class="small-btn" data-setup="${r[0]}">Fix</button>`}</div>`).join('')}</div>` : ''}
     <div class="card"><h3>🆘 Help button (always works, even when locked or at rest time)</h3>
       <label>Who ${esc(kidName())} calls <input id="hName" value="${esc(S.helpName)}" placeholder="e.g. Mom, Dad, Grandma"></label>
@@ -628,6 +665,8 @@ function renderParent(firstRun) {
       <label>Rest time starts <input id="sB1" type="time" value="${S.bedtimeStart}"></label>
       <label>Rest time ends <input id="sB2" type="time" value="${S.bedtimeEnd}"></label>
       <label>Loudest volume ${esc(kidName())} can choose (%) <input id="sVC" type="number" min="10" max="100" step="10" value="${S.volumeCapPct}"></label>
+      <label class="chk"><input id="sMic" type="checkbox" ${S.micOn ? 'checked' : ''}> 🎤 Use the microphone for reading out loud</label>
+      <p class="muted">${Bridge.native && !Bridge.state().ios ? 'On this tablet, speech is recognised on the device when Android has the offline English voice; otherwise Android may send it to Google to be recognised.' : 'In a web browser, Chrome sends what your child says to Google, and Safari to Apple, to turn it into text. Nothing is recorded or kept by Learning Gate.'} Turn it off and stories are read to your child instead.</p>
       <label class="chk"><input id="sRA" type="checkbox" ${S.readAloud ? 'checked' : ''}> Read-out-loud practice ${Bridge.canListen() ? '' : '<small>(no speech recognizer found)</small>'}</label>
       <label class="chk"><input id="sRQ" type="checkbox" ${S.readQuestions ? 'checked' : ''}> Read each question aloud</label>
       <div class="subjs">${subj.map(s => `<label class="chk"><input type="checkbox" data-subj="${s}" ${S.subjects[s] ? 'checked' : ''}> ${SUBJECT_INFO[s].icon} ${SUBJECT_INFO[s].name}</label>`).join('')}</div>
@@ -643,6 +682,11 @@ function renderParent(firstRun) {
   $('#hTest').onclick = () => { saveParent(); openHelp(); };
   $('#sTest').onclick = () => { if (!saveParent()) return; if (S.deviceRole === 'parent') return renderParentView(); trySync().then(ok => { renderParent(false); alert(ok ? 'Sent! Check the Sessions tab in your Google Sheet.' : 'Could not send. Check the internet connection, URL and secret.'); }); };
   if ($('#sView')) $('#sView').onclick = () => { if (saveParent()) renderParentView(); };
+  if ($('#sDashPinSet')) $('#sDashPinSet').onclick = () => { const p = $('#sDashPin').value.trim(), note = $('#sDashNote');
+    if (!PIN_RE.test(p)) return note.textContent = 'The remote-control PIN must be 4 or 6 digits.'; if (easyPin(p)) return note.textContent = 'That PIN is too easy to guess. Please pick another.';
+    if (!saveParent() || !syncReady()) return; note.textContent = 'Saving…';
+    syncPost({action: 'setpin', pin: p}).then(r => { $('#sDashPin').value = ''; note.textContent = r && r.ok ? '✅ Remote-control PIN saved in your Sheet.' : 'Could not save: ' + (r && r.error === 'secret' ? 'the secret does not match your script.' : 'please update your Sheet script to v0.3.2 (FAMILY_SETUP.md).'); })
+      .catch(() => { note.textContent = 'Could not reach your Sheet. Check the internet connection and the web app URL.'; }); };
   $('#tGive').onclick = () => { if (!treatsWaiting()) return; saveParent(); P.treatsGiven++; P.treatLog.push(Date.now()); saveAll(); renderParent(false); };
   $('#pLock').onclick = () => { saveParent(); Bridge.lockNow(); renderHome(); };
   $('#pUnl').onclick = () => { saveParent(); Bridge.unlock(30); renderPlay(); };
@@ -654,15 +698,15 @@ function renderParent(firstRun) {
   show('parent');
 }
 function saveParent() {
-  const np = $('#pinNew').value.trim(); if (np) { if (!/^\d{4}$/.test(np)) { alert('PIN must be 4 digits'); return false; } if (/^(\d)\1{3}$|^(0123|1234|2345|3456|4567|5678|6789|9876|4321|2580|1111|0000)$/.test(np)) { alert('That PIN is too easy to guess. Please pick another.'); return false; } S.pin = makePin(np); }
-  if (!S.pin) { alert('Please set a 4-digit PIN first.'); return false; }
+  const np = $('#pinNew').value.trim(); if (np) { if (!PIN_RE.test(np)) { alert('The PIN must be 4 or 6 digits.'); return false; } if (easyPin(np)) { alert('That PIN is too easy to guess. Please pick another.'); return false; } setPin(np); }
+  if (!S.pin) { alert('Please set a PIN (4 or 6 digits) first.'); return false; }
   S.childName = ($('#sName').value.trim() || S.childName).slice(0, 30); S.questionsPerUnlock = Math.max(3, Math.min(10, +$('#sQ').value || 5));
   S.minutesPerUnlock = Math.max(5, Math.min(120, +$('#sM').value || 20)); S.dailyMaxMinutes = Math.max(0, +$('#sD').value || 0);
   saveTreatSettings(); saveSyncSettings();
   S.helpName = $('#hName').value.trim().slice(0, 30); S.helpPhone = $('#hPhone').value.trim(); S.faceTimeId = $('#hFT').value.trim(); S.faceTimeVideo = $('#hFTv').checked; S.helpWhatsApp = $('#hWA').checked; S.alwaysWhatsApp = $('#hWAalways').checked;
   Bridge.setSafetyApps(S.alwaysWhatsApp ? ['com.whatsapp'] : []);
   S.volumeCapPct = Math.max(10, Math.min(100, +$('#sVC').value || 80)); Bridge.volumeCap(S.volumeCapPct);
-  S.bedtimeStart = $('#sB1').value; S.bedtimeEnd = $('#sB2').value; S.readAloud = $('#sRA').checked; S.readQuestions = $('#sRQ').checked;
+  S.bedtimeStart = $('#sB1').value; S.bedtimeEnd = $('#sB2').value; S.readAloud = $('#sRA').checked; if ($('#sMic')) S.micOn = $('#sMic').checked; S.readQuestions = $('#sRQ').checked;
   document.querySelectorAll('[data-subj]').forEach(c => S.subjects[c.dataset.subj] = c.checked);
   if (!Object.values(S.subjects).some(Boolean)) S.subjects.math = true;
   const ap = document.querySelectorAll('[data-pkg]'); if (ap.length) Bridge.setAllowedApps([...ap].filter(c => c.checked).map(c => c.dataset.pkg));

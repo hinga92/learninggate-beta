@@ -232,8 +232,7 @@ function handleNativeMsg(m) {
 const remoteByJS = () => { const st = Bridge.state(); return S.deviceRole === 'child' && typeof syncReady === 'function' && syncReady() && (!Bridge.native || st.ios); };
 function pollRemote() {
   if (!remoteByJS()) return; const dev = S.deviceName || defaultDeviceName();
-  fetch(S.syncUrl + (S.syncUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(S.syncKey) + '&poll=' + encodeURIComponent(dev) + '&since=' + P.remoteLastId)
-    .then(r => r.json()).then(d => {
+  syncPost({action: 'poll', poll: dev, since: P.remoteLastId}).then(d => {
       const cmds = (d && d.cmds) || []; let n = 0;
       cmds.forEach(c => { if (!(c.id > P.remoteLastId)) return; P.remoteLastId = c.id; n++;
         if (c.type === 'unlock') { const m = Math.max(5, Math.min(60, +c.minutes || 15)); Bridge.unlock(m); handleNativeMsg('#unlock:' + m); }
@@ -281,13 +280,24 @@ function renderRemote(d, snaps) {
   box.querySelectorAll('[data-msg]').forEach(b => b.onclick = () => sendRemote({type: 'msg', text: b.dataset.msg, target: target()}));
   $('#rcSend').onclick = () => { const t = $('#rcText').value.trim(); if (t) sendRemote({type: 'msg', text: t.slice(0, 100), target: target()}); };
 }
-let rcPinAt = 0, rcPin = '';   // the Sheet checks this PIN again before passing a command on
+// The remote-control (dashboard) PIN is checked by the family's Sheet, with its own lockout. It is remembered for 3 minutes
+// and forgotten as soon as the app goes to the background.
+let rcPinAt = 0, rcPin = '';
+const forgetRcPin = () => { rcPinAt = 0; rcPin = ''; };
+document.addEventListener('visibilitychange', () => { if (document.hidden) forgetRcPin(); });
 function sendRemote(c) {
-  const go = () => fetch(S.syncUrl, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({key: S.syncKey, action: 'cmd', pin: rcPin}, c))})
-    .then(() => { $('#rcNote').textContent = '✅ Sent! It reaches the device within about a minute. This page refreshes in a minute to confirm.'; setTimeout(() => { if (onScreen() === 'pview') renderParentView(); }, 70000); })
-    .catch(() => { $('#rcNote').textContent = 'Could not send. Check the internet connection.'; });
-  if (Date.now() - rcPinAt < 10 * 60000) return go();
-  askPin((ok, pin) => { if (ok) { rcPinAt = Date.now(); rcPin = pin; go(); } }, 'PIN to control the device');
+  const note = t => { if ($('#rcNote')) $('#rcNote').textContent = t; };
+  const go = () => syncPost(Object.assign({action: 'cmd', pin: rcPin}, c)).then(r => {
+      if (r && r.ok) { rcPinAt = Date.now(); note('✅ Sent! It reaches the device within about a minute. This page refreshes in a minute to confirm.'); setTimeout(() => { if (onScreen() === 'pview') renderParentView(); }, 70000); return; }
+      forgetRcPin();
+      if (r && r.error === 'wrong') { note('Wrong remote-control PIN. Try again.'); return ask(); }
+      if (r && r.error === 'locked') return note('Too many wrong PINs. Please wait a few minutes.');
+      if (r && r.error === 'nopin') return note('Set a remote-control PIN first: Grown-ups → 📡 Progress sync → Set remote-control PIN.');
+      note('Could not send: please update your Sheet script to v0.3.2 (see FAMILY_SETUP.md).'); })
+    .catch(() => note('Could not send. Check the internet connection.'));
+  const ask = () => askDigits((ok, pin) => { if (ok) { rcPin = pin; go(); } }, 'Remote-control PIN');
+  if (rcPin && Date.now() - rcPinAt < 3 * 60000) return go();
+  forgetRcPin(); ask();
 }
 
 // =====================================================================

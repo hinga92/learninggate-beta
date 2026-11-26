@@ -6,7 +6,7 @@
 'use strict';
 
 const GRADES = [['K', 'Kindergarten', '🌱'], ['1', 'Grade 1', '🌿'], ['2', 'Grade 2', '🌳'], ['3', 'Grade 3', '🍎'], ['4', 'Grade 4', '🚀'], ['5', 'Grade 5', '🎓']];
-const EASY_PIN = /^(\d)\1{3}$|^(0123|1234|2345|3456|4567|5678|6789|9876|4321|2580|0000)$/;
+const EASY_PIN = {test: easyPin};
 const PHONE_OK = v => !v || /^\+?[0-9 ()-]{8,20}$/.test(v);
 const TIME_OK = v => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 
@@ -27,6 +27,7 @@ const WZ_STEPS = [
   {title: 'Welcome', html: () => `<div class="card hl wzhero"><div class="mascot">🦉</div>
       <h3>Let's set up Learning Gate for your child</h3>
       <p>This device will stay on a friendly learning screen. Your child answers a few questions or reads a real book to <b>earn play time</b> on the apps you choose.</p>
+      ${Bridge.native ? '' : '<p class="note">🌐 <b>Web preview:</b> all the learning works here, but a web page can\'t lock the device. To keep your child on Learning Gate, use Guided Access on an iPad, or the Android tablet app. The microphone starts off; see the guide\'s "Safety and privacy".</p>'}
       <p>Setup takes about 3 minutes. You can change every answer later in <b>⚙ Grown-ups</b> (hold the ⚙ button for 1 second, then enter your PIN).</p>
       <p class="muted">Everything stays on this device. Sharing progress with your phone through your own Google Sheet is optional and comes later.</p></div>`},
   {title: 'Your child', html: w => `<div class="card"><h3>👧 About your child</h3>
@@ -37,13 +38,13 @@ const WZ_STEPS = [
     save: w => { w.childName = $('#wName').value.trim().replace(/[<>`"]/g, '').slice(0, 30); w.mascotName = $('#wOwl').value.trim().replace(/[<>`"]/g, '').slice(0, 20) || 'Hoot';
       if (!w.childName) return 'Please type your child\'s name.'; }},
   {title: 'Grown-up PIN', html: w => `<div class="card"><h3>🔐 Grown-up PIN</h3>
-      <p>A 4-digit PIN protects the Grown-ups area. You also use it to unlock the device for yourself and to confirm real-book reading.</p>
-      <label>New PIN <input id="wPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" value="${esc(w.pin)}"></label>
-      <label>Type it again <input id="wPin2" type="password" inputmode="numeric" maxlength="4" autocomplete="off" value="${esc(w.pin2)}"></label>
-      <p class="muted">${w.rerun ? 'Leave both boxes empty to keep your current PIN. ' : ''}Don't use a birthday or something easy like 1234. Keep it from your child.</p></div>`,
+      <p>A PIN of 4 or 6 digits protects the Grown-ups area. You also use it to unlock the device for yourself and to confirm real-book reading. 6 digits is stronger.</p>
+      <label>New PIN <input id="wPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" value="${esc(w.pin)}"></label>
+      <label>Type it again <input id="wPin2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" value="${esc(w.pin2)}"></label>
+      <p class="muted">${w.rerun ? 'Leave both boxes empty to keep your current PIN. ' : ''}Don't use a birthday or something easy like 1234. Keep it from your child. The PIN stays on this device: it is never sent anywhere, and each device has its own.</p></div>`,
     save: w => { w.pin = $('#wPin').value.trim(); w.pin2 = $('#wPin2').value.trim();
       if (w.rerun && !w.pin && !w.pin2) return;
-      if (!/^\d{4}$/.test(w.pin)) return 'The PIN must be exactly 4 digits.';
+      if (!PIN_RE.test(w.pin)) return 'The PIN must be 4 or 6 digits.';
       if (EASY_PIN.test(w.pin)) return 'That PIN is too easy to guess. Please pick another.';
       if (w.pin !== w.pin2) return 'The two PINs are different. Please type the same PIN twice.'; }},
   {title: 'Help and helpers', html: w => `<div class="card"><h3>🆘 Who does ${esc(w.childName || 'your child')} call for help?</h3>
@@ -129,7 +130,7 @@ function finishWizard() {
     studyHelpers: w.helpers.map(h => ({name: h.name, num: h.num})), bedtimeStart: w.bedtimeStart, bedtimeEnd: w.bedtimeEnd, btFrom: w.btFrom, btTo: w.btTo,
     questionsPerUnlock: w.questionsPerUnlock, minutesPerUnlock: w.minutesPerUnlock, dailyMaxMinutes: w.dailyMaxMinutes, classWords: uniqWords(w.classWords), setupDone: true});
   if (w.bookMinutes) S.bookMinutes = w.bookMinutes;
-  if (w.pin) { S.pin = makePin(w.pin); S.pinLock = {fails: 0, until: 0}; }
+  if (w.pin) setPin(w.pin);
   S.settingsT = Date.now();
   applyGrade();
   saveAll(); Bridge.volumeCap(S.volumeCapPct);

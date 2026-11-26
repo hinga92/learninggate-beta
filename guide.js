@@ -1,6 +1,6 @@
 /* In-app User guide + About (Grown-ups area). Family edition: written for any family. */
 'use strict';
-const APP_VERSION = '0.3.1 (family beta)';
+const APP_VERSION = '0.3.2 (family beta)';
 const APP_DATE = 'November 2026';
 const APP_DEVELOPER = 'a parent, for families in our community';
 const MASCOT = () => (typeof S !== 'undefined' && S.mascotName) || 'Hoot';
@@ -16,12 +16,18 @@ const GUIDE = [
   ['First-time setup', `
     <p>The first time the app opens, a short <b>setup wizard</b> asks for:</p>
     <ol><li>Your child's first name (or a nickname) and grade: <b>Kindergarten to Grade 5</b>.</li>
-    <li>A 4-digit <b>grown-up PIN</b>.</li>
+    <li>A <b>grown-up PIN</b> of 4 or 6 digits (6 is stronger). It stays on that device; each device has its own.</li>
     <li>Who your child calls with the 🆘 Help button (or <b>Skip for now</b> and add it later), and up to 3 optional <b>study-call helpers</b> (name and WhatsApp number).</li>
     <li>Play rules (questions per unlock, minutes earned, daily limit), <b>rest time</b> and <b>bedtime-story time</b>.</li>
     <li>An optional <b>class sight-word list</b> from the teacher.</li></ol>
     <p>All of it can be changed later here in Grown-ups. <b>👧 Child, grade and sight words</b> has a button to run the wizard again.</p>
     <p><b>On an Android tablet</b>, then tap <b>Fix</b> next to each ⚠️ in <b>Tablet setup</b> (Home app, display over other apps, microphone, usage access…) and tick the apps your child may use after learning. The lock only works while Learning Gate is the tablet's <b>Home app</b>: a copy that isn't the Home app (for example a test copy next to another Learning Gate) never pulls itself in front of other apps. <b>On an iPad</b>, approve Screen Time and choose the apps that need learning first.</p>`],
+  ['Web preview or tablet app?', `
+    <p>The <b>web page</b> (in Safari or Chrome) has all the learning: questions, Pip's Stories, the bedtime story, real-book reading and challenges. It <b>can't lock the device</b>: a browser page can't stop a child from opening other apps.</p>
+    <ul><li>On an iPad or iPhone, keep your child in the page with <b>Guided Access</b> (Settings → Accessibility → Guided Access, then triple-click the side button).</li>
+    <li>The lock that keeps a tablet on Learning Gate until learning is done needs the <b>Android tablet app</b>, set as the tablet's Home app.</li>
+    <li>On the web page the microphone starts <b>off</b> (see "Safety and privacy"); stories are read to your child instead. Turn it on in Grown-ups → Rules.</li>
+    <li>Progress on the web page stays in that browser. Clearing the browser's website data erases it.</li></ul>`],
   ["A learning day", `
     <ol><li>__KID__ taps <b>🚀 Let's learn!</b> Each question is read aloud. A wrong first try gives a hint; a second miss shows the answer and brings the skill back later.</li>
     <li>The reward screen shows the score and the minutes earned. <b>Let's play!</b> opens the apps you allowed, with a countdown.</li>
@@ -99,24 +105,32 @@ const GUIDE = [
   ['Your Google Sheet: phone dashboard and weekly email (optional)', `
     <p>Without a Sheet, everything works on the one device. With your own copy of the <b>Learning Gate Sheet</b> ("family kit") you also get:</p>
     <ul><li><b>One progress on every device</b> (tablet and iPad share stars, trophies, levels, words, books and settings).</li>
-    <li>A <b>dashboard on your phone</b> with remote control: +15/+30 minutes of play, minutes to earn, lock now, and quick messages (each asks your PIN).</li>
+    <li>A <b>dashboard on your phone</b> with remote control: +15/+30 minutes of play, minutes to earn, lock now, and quick messages. Commands need your <b>remote-control PIN</b>, which you set once on the phone dashboard (or in the app on your phone: 📡 Progress sync → Set remote-control PIN). Use a different PIN from the one on your child's devices.</li>
     <li>A <b>weekly email</b> on Sunday afternoon to you (and anyone you add to REPORT_TO in the script).</li></ul>
     <p><b>How:</b> follow <b>FAMILY_SETUP.md</b> (about 10 minutes): make a copy of the Sheet in your Google account, paste the script, set your own long SECRET, deploy it as a web app, then paste the web app URL and SECRET in <b>📡 Progress sync</b> on each device. On your phone choose <b>Parent's phone</b>.</p>
     <p>The data stays in your Google Drive. Keep the Sheet's sharing <b>Restricted</b>, and don't rename its tabs.</p>`],
   ['Safety and privacy', `
-    <ul><li>No ads, no tracking, no outside analytics, no account with us. Without a Sheet, nothing leaves the device.</li>
-    <li>With a Sheet, progress goes only to <b>your own</b> Google account. The Sheet answers only devices that know your SECRET, and refuses everyone until you change the sample SECRET. Remote commands also need your PIN, with a lockout after 5 wrong tries. At most 8 devices can connect.</li>
+    <p><b>What Learning Gate collects:</b> nothing by default. No ads, no tracking, no outside analytics, no account with us, and the people who make Learning Gate never see your child's data.</p>
+    <ul><li><b>On the device:</b> what you type in (your child's first name, grade, Help and helper phone numbers) and your child's progress. It stays on that device.</li>
+    <li><b>Your own Google Sheet (optional, off until you set it up):</b> progress, book titles and feelings go to <b>your</b> Google account only. Each device's grown-up PIN is <b>never</b> sent there.</li>
+    <li><b>Microphone:</b> when your child reads out loud, speech is turned into text to check the words. Nothing is recorded or kept by Learning Gate. On the tablet app this happens on the tablet when Android has its offline English voice; otherwise Android may send it to Google. On the web page, Chrome sends it to Google and Safari to Apple. That is why the web page starts with the microphone off. Turn it on or off in Grown-ups → Rules.</li>
+    <li><b>Help and study calls</b> only go to the numbers you entered.</li></ul>
+    <p><b>How your Sheet is protected:</b></p>
+    <ul><li>The Sheet answers only devices that know your SECRET, and refuses everyone until you change the sample SECRET. The SECRET travels inside each request, never in a web address.</li>
+    <li>Remote commands need your separate <b>remote-control PIN</b>, checked by the Sheet, with a lockout after 5 wrong tries. The phone remembers it for 3 minutes and forgets it when the app is closed. At most 8 devices can connect.</li>
     <li>The weekly email only goes out on Sunday afternoon (once), and the test email only from the Apps Script editor, so nobody else can use your Sheet to send email.</li>
     <li>The app only runs its own code (a content security policy blocks anything injected), and settings shared between devices are checked before use.</li>
-    <li>The PIN is stored scrambled, with a lockout after 5 wrong tries.</li>
+    <li>The grown-up PIN is stored scrambled (PBKDF2, 210,000 rounds), with a lockout after 5 wrong tries. It keeps your child out of Grown-ups; it is <b>not</b> device security. Someone who can read the device's storage could still try all the PINs, so a 6-digit PIN is safer, and a lost device should be treated as lost (below).</li>
     <li>USB debugging lets anyone with a cable read the tablet's app data: keep it off except while installing updates.</li>
-    <li>If a device is lost: make a new dashboard link, change the SECRET in your script, deploy a new version, and enter the new SECRET on your other devices.</li></ul>`],
+    <li>If a device is lost: change the PIN on your other devices, set a new remote-control PIN, make a new dashboard link, change the SECRET in your script, deploy a new version, and enter the new SECRET on your other devices.</li>
+    <li><b>Known limits of the web page:</b> it is hosted on GitHub Pages, which can't send the "don't show this page inside other websites" header, and the page allows inline styles (never inline scripts). Neither exposes your child's data, which stays in the browser.</li></ul>`],
   ['Troubleshooting', `
     <ul><li><b>Can't open Grown-ups:</b> hold ⚙ (top-right of home) for about 1 second.</li>
     <li><b>Forgot the PIN:</b> the PIN can't be recovered. Remove and reinstall the app (progress on this device is lost unless it was shared to your Sheet).</li>
     <li><b>Progress sync says it couldn't send:</b> check the internet, that the URL ends in <b>/exec</b>, and that the SECRET is exactly the one in your script.</li>
+    <li><b>After updating to 0.3.2, sync or remote control stopped working:</b> paste the new <b>LearningGateSync.gs</b> into your Sheet's script and deploy a new version (FAMILY_SETUP.md, "Updating"). Then set a remote-control PIN on your phone.</li>
     <li><b>Dashboard shows no devices:</b> finish one learning session on a device with sync on.</li>
-    <li><b>Read-aloud or stories never hear your child:</b> allow the microphone in Tablet setup (iPad: Settings → Learning Gate → Microphone and Speech Recognition).</li>
+    <li><b>Read-aloud or stories never hear your child:</b> check that 🎤 <b>Use the microphone</b> is on in Rules, then allow the microphone in Tablet setup (iPad: Settings → Learning Gate → Microphone and Speech Recognition).</li>
     <li><b>No 🌙 button:</b> it only shows during story time, and can be switched off in the 🌙 Bedtime story card.</li>
     <li><b>You need the device yourself:</b> Right now → Parent mode.</li></ul>`]
 ];

@@ -105,7 +105,7 @@ tr.sh td{background:#faf6ee;font-weight:700}td small{color:#999}
 .modal{display:none;position:fixed;inset:0;background:#0007;z-index:10;align-items:center;justify-content:center}.modal.on{display:flex}
 .pinbox{background:#fff;border-radius:24px;padding:22px 30px;text-align:center}
 .pindots{font-size:40px;letter-spacing:10px;margin:8px 0 14px}.pindots.shake{animation:shake .4s;color:var(--red)}
-.pinpad{display:grid;grid-template-columns:repeat(3,90px);gap:10px}.pinpad button{height:70px;font-size:30px;border-radius:16px;background:#f3eee5}
+.pinpad .pinok{grid-column:2;background:var(--green,#4caf50);color:#fff}.pinpad{display:grid;grid-template-columns:repeat(3,90px);gap:10px}.pinpad button{height:70px;font-size:30px;border-radius:16px;background:#f3eee5}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:20;overflow:hidden}
 #fx i{position:absolute;top:-40px;font-style:normal;animation:fall 2s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.7}}
@@ -329,3 +329,4 @@ body.night,body.night #bedtime{background:#141a3a;color:#e8e4ff}
 .bg-sea{background:linear-gradient(#bfe6ff,#e9f7ff)}.bg-desert{background:linear-gradient(#ffe9c7,#f7d6a0)}.bg-forest{background:linear-gradient(#d4f0d0,#a9d8a0)}
 .bg-space{background:linear-gradient(#2d2a5a,#5b4fa0);color:#fff}.bg-snow{background:linear-gradient(#eef6ff,#ffffff)}.bg-city{background:linear-gradient(#e6e6f2,#cfd6e6)}.bg-night{background:linear-gradient(#3a3570,#6b5fb0);color:#fff}
 .lvhead{font-size:28px;color:#5B3FA0}
+.note{background:#fff6dc;border-radius:12px;padding:10px 12px;font-size:16px;text-align:left}

@@ -6,7 +6,8 @@
 // 1. Shared progress + shared settings
 // ---------------------------------------------------------------------------
 const LOCAL_ONLY_P = ['syncedT', 'remoteLastId', 'bookTimer', 'events', 'syncBase', 'lastSync'];
-const LOCAL_ONLY_S = ['deviceName', 'deviceRole', 'syncUrl', 'syncKey', 'pinLock', 'settingsT'];
+// The grown-up PIN (and its length) never leaves the device: each device keeps its own (audit H-1).
+const LOCAL_ONLY_S = ['deviceName', 'deviceRole', 'syncUrl', 'syncKey', 'pin', 'pinLen', 'pinLock', 'settingsT', 'micOn'];
 const myDevice = () => S.deviceName || defaultDeviceName();
 const unionBy = (a, b, key) => { const m = new Map(); (a || []).concat(b || []).forEach(x => { if (x == null) return; const k = key(x); if (!m.has(k)) m.set(k, x); }); return [...m.values()]; };
 const counters = p => ({stars: p.stars || 0, treatsGiven: p.treatsGiven || 0, sessionCount: p.sessionCount || 0, usage: Object.assign({}, p.usage || {})});
@@ -47,8 +48,7 @@ let shareBusy = false, shareStatus = '';
 function shareState() {
   if (shareBusy || S.deviceRole === 'parent' || !syncReady()) return Promise.resolve(false);
   shareBusy = true;
-  const url = S.syncUrl + (S.syncUrl.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(S.syncKey) + '&state=1';
-  return fetch(url).then(r => r.json()).then(d => {
+  return syncPost({action: 'getstate'}).then(d => {
     if (!d || !d.ok) throw new Error('refused');
     const me = myDevice();
     P.sessions.forEach(s => { if (!s.dev) s.dev = me; });                // tag what this device did
