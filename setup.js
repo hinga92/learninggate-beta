@@ -110,7 +110,9 @@ function renderWizard() {
   $('#wzNext').textContent = w.i === 0 ? '🚀 Start' : w.i === WZ_STEPS.length - 1 ? '✔ Finish' : 'Next ➡';
   if ($('#wHSkip')) $('#wHSkip').onchange = () => { $('#wHFields').hidden = $('#wHSkip').checked; };
   document.querySelectorAll('[data-grade]').forEach(b => b.onclick = () => { w.childName = $('#wName').value; w.mascotName = $('#wOwl').value; w.grade = b.dataset.grade;
-    if (w.questionsPerUnlock === S.questionsPerUnlock) w.questionsPerUnlock = w.grade === 'K' ? 3 : 5; renderWizard(); });
+    if (w.questionsPerUnlock === S.questionsPerUnlock) w.questionsPerUnlock = w.grade === 'K' ? 3 : 5;
+    w.bookMinutes = {K: 10, '1': 15, '2': 15, '3': 20, '4': 25, '5': 30}[w.grade];   // real-book timer that fits the grade
+    renderWizard(); });
   show('setup'); $('#setup').scrollTop = 0;
   const first = $('#wzBody input'); if (first && !first.value) setTimeout(() => { try { first.focus(); } catch (e) {} }, 50);
 }
@@ -126,6 +128,7 @@ function finishWizard() {
   Object.assign(S, {childName: w.childName, grade: w.grade, mascotName: w.mascotName, helpName: w.helpName, helpPhone: w.helpPhone,
     studyHelpers: w.helpers.map(h => ({name: h.name, num: h.num})), bedtimeStart: w.bedtimeStart, bedtimeEnd: w.bedtimeEnd, btFrom: w.btFrom, btTo: w.btTo,
     questionsPerUnlock: w.questionsPerUnlock, minutesPerUnlock: w.minutesPerUnlock, dailyMaxMinutes: w.dailyMaxMinutes, classWords: uniqWords(w.classWords), setupDone: true});
+  if (w.bookMinutes) S.bookMinutes = w.bookMinutes;
   if (w.pin) { S.pin = makePin(w.pin); S.pinLock = {fails: 0, until: 0}; }
   S.settingsT = Date.now();
   applyGrade();

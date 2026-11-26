@@ -5,8 +5,15 @@
 'use strict';
 
 // Questions are written for this app (themes only, no text from the books).
-const LIB_GENERIC = ['Who was in the story?', 'Where did the story happen?', 'What was the problem in the story?', 'How did the story end?',
+// K–2: who, where, problem, ending (RL.K–2.1–3). Grades 3–5 add character change, theme, point of view and evidence (RL/RI.3–5).
+const LIB_GENERIC_K2 = ['Who was in the story?', 'Where did the story happen?', 'What was the problem in the story?', 'How did the story end?',
   'What was your favorite part? Why?', 'Tell me what happened first, next and last.', 'Did something like this ever happen to you?', 'How did the main character feel?'];
+const LIB_GENERIC_35 = ['How did the main character change from the beginning to the end?', 'What lesson or message do you think the author wanted to share?',
+  'Which part of the book shows that most clearly? Find it and read it to me.', 'Who is telling the story? How would it change if someone else told it?',
+  'What was the most important event? Why?', 'What did you learn that you did not know before?', 'Was there a word you did not know? What do you think it means?',
+  'Would you recommend this book to a friend? Why or why not?', 'Sum up the chapter you read in three sentences.', 'What do you predict will happen next?'];
+const libGeneric = () => (typeof gradeNum === 'function' && gradeNum() >= 3) ? LIB_GENERIC_35 : LIB_GENERIC_K2;
+const LIB_GENERIC = LIB_GENERIC_K2;   // kept for older code
 // Sound game words (made for this app).
 const LIB_SOUNDS = {
   'short a': ['cat', 'map', 'hat', 'van', 'bag', 'jam', 'ran', 'pan'], 'short e': ['bed', 'red', 'pet', 'ten', 'hen', 'net', 'leg', 'wet'],
@@ -72,7 +79,7 @@ const libNextUp = () => libSeries().map(s => s.books.find(b => statusRank(lstate
   return r; }; })();
 
 function libQuestions(b) {
-  const own = (b.qs || []).concat(P.libQs[b.id] || []), gen = shuffle(LIB_GENERIC);
+  const own = (b.qs || []).concat(P.libQs[b.id] || []), gen = shuffle(libGeneric());
   return b.mode === 'together' ? shuffle(own).slice(0, 2).concat(gen.slice(0, 1)) : shuffle(own).slice(0, 1).concat(gen).slice(0, 3);
 }
 function libTalk(b) {

@@ -217,7 +217,7 @@ function yourTurn(aloneFirst) {
 }
 
 // Speech engines spell "Pip" many ways (GG, Gg, Pip's…), so story names always count as read.
-const STORY_NAMES = new Set(['gigi', "gigi's"]);
+const STORY_NAMES = new Set(['pip', "pip's", 'pips']);
 function scorePage(text, alts) {
   const res = scoreRead(text, alts), tw = norm(text);
   tw.forEach((w, k) => { if (STORY_NAMES.has(w)) res.hit[k] = true; });

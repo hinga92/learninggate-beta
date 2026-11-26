@@ -1,6 +1,6 @@
 /* In-app User guide + About (Grown-ups area). Family edition: written for any family. */
 'use strict';
-const APP_VERSION = '0.2 (family beta)';
+const APP_VERSION = '0.3 (family beta)';
 const APP_DATE = 'November 2026';
 const APP_DEVELOPER = 'a parent, for families in our community';
 const MASCOT = () => (typeof S !== 'undefined' && S.mascotName) || 'Hoot';
@@ -38,7 +38,13 @@ const GUIDE = [
     <ul><li><b>Here:</b> the card <b>📚 Let __KID__ earn more play time today</b> at the top of Grown-ups → +30 or +60.</li>
     <li><b>From your phone's dashboard</b> (if you set up your Sheet): Remote control → <b>📚 +30 / +60 min to earn</b> (asks your PIN).</li></ul>
     <p>Questions or <b>I read a book</b> then earn play again until the extra minutes are used. Today only; rest time still applies.</p>`],
-  ["Pip's Stories (sight-word books)", `
+  ["Pip's Stories: books for every grade", `
+    <p><b>📖 Pip's Stories</b> changes with the grade you chose. The shelf shows three tabs: <b>⬇ Easier</b>, <b>📚 My grade</b> and <b>🚀 Challenge</b>, and the book that fits best has a <b>⭐ Just right</b> badge.</p>
+    <ul><li><b>Kindergarten–Grade 1:</b> short sight-word books. Pip reads each page first, then your child repeats it (echo reading).</li>
+    <li><b>Grades 2–3:</b> longer stories and true-fact books. Your child reads each page out loud into the microphone (Pip can read it first), with "words to know" before the book and 3–5 questions after it. Grade 3 adds a quick check-in question halfway.</li>
+    <li><b>Grades 4–5:</b> chapter-style books with headings, one paragraph a page, read silently or aloud. One <b>fluency page</b> is read into the microphone to measure accuracy and words per minute. Questions include main idea, inference, theme, vocabulary and <b>"Which sentence from the book shows that?"</b> evidence questions, with a <b>🔎 Look back</b> button.</li></ul>
+    <p><b>Levels:</b> a book is "just right" when about 80% of the questions are right on the first try and about 95% (Grade 2) or 90% (Grades 3–5) of the words are read correctly. Then the next level opens. After two hard books in a row, an easier book is suggested. Children can always choose any book and re-read. Grown-ups → <b>📖 Pip's Stories: reading level</b> shows the level, the last books, scores and reading speed.</p>`],
+  ["Pip's sight-word books (Kindergarten–Grade 1)", `
     <p><b>📖 Pip's Stories</b> (home screen) is a series of short books, <i>Pip's Adventures</i>, with simple animations. Each book adds 2–4 new sight words.</p>
     <ol><li><b>Warm-up:</b> tap the new words (and up to 3 of your child's own learning words) to hear them.</li>
     <li><b>Read with Pip:</b> on each page Pip reads first while the words light up, then __KID__ repeats it into the microphone. Words turn green when read. Any word can be tapped to hear it. After 3 tries the story always moves on.</li>

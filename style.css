@@ -317,3 +317,15 @@ body.night,body.night #bedtime{background:#141a3a;color:#e8e4ff}
 .coin.c1{width:52px;height:52px;background:#d98c4a}.coin.c5{width:60px;height:60px;background:#d6d6d6}.coin.c10{width:48px;height:48px;background:#e6e6e6}.coin.c25{width:68px;height:68px;background:#cfcfcf}
 .eqlabel{font:600 20px system-ui,sans-serif;color:#555;margin:6px 0}
 .fracbar,.nline,.grid,.rect,.angle,.coord{max-width:100%;height:auto}
+/* leveled Pip's Stories (leveled.js) */
+.lvtabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}.lvtabs small{display:block;font-size:14px;opacity:.8}
+.stcard.justright{outline:5px solid #F2C94C;transform:scale(1.02)}.jr{background:#F2C94C;color:#3b2a00;border-radius:999px;padding:2px 12px;font:700 16px system-ui,sans-serif}
+.lvtext{font-size:34px;line-height:1.55;text-align:left;max-width:900px;margin:0 auto}.lvtext.upper{font-size:28px;line-height:1.6}
+.lvhead{margin:6px auto;max-width:900px;font-family:system-ui,sans-serif}.scene.small{height:150px}
+.vmean{font:500 24px system-ui,sans-serif;min-height:30px;text-align:center;max-width:800px;margin:6px auto}
+.lvlook{max-height:80vh;overflow:auto;text-align:left;font:400 22px/1.5 system-ui,sans-serif;max-width:900px}.lvlook h4{margin:10px 0 0}
+.answers.evid .choice{font-size:22px;text-align:left;line-height:1.35}
+.lvlook p.lvmark{background:#fff3b0;border-radius:10px;padding:6px 10px;box-shadow:0 0 0 3px #F2C94C}
+.bg-sea{background:linear-gradient(#bfe6ff,#e9f7ff)}.bg-desert{background:linear-gradient(#ffe9c7,#f7d6a0)}.bg-forest{background:linear-gradient(#d4f0d0,#a9d8a0)}
+.bg-space{background:linear-gradient(#2d2a5a,#5b4fa0);color:#fff}.bg-snow{background:linear-gradient(#eef6ff,#ffffff)}.bg-city{background:linear-gradient(#e6e6f2,#cfd6e6)}.bg-night{background:linear-gradient(#3a3570,#6b5fb0);color:#fff}
+.lvhead{font-size:28px;color:#5B3FA0}
